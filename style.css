@@ -1,0 +1,26 @@
+/* style.css */
+html, body {
+    background-color: #1e1e1e;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    /* Permettiamo lo scroll verticale se il grafico è alto */
+    overflow-x: hidden; 
+    overflow-y: auto; 
+}
+
+body {
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.dashboard-container {
+    width: 100%;
+    /* Non mettiamo height qui, comanda il Python */
+    margin: 0 auto;
+}
+
+/* Rimuove eventuali bordi blu al click */
+*:focus {
+    outline: none;
+}
