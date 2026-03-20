@@ -1,13 +1,15 @@
-# Ignora la cartella con i tuoi dati reali
-exports/
-
-# Ignora i report generati (opzionale, se vuoi tenerli solo in locale)
+# --- Analytics output files ---
+# These are generated automatically, so they don't usually need to be tracked
 report_finale.csv
 stocks_profit.csv
 report_readable.txt
+
+# --- Dashboard output ---
 dashboard.html
 
-# Ignora file di sistema e Python
+# --- System files ---
 __pycache__/
 *.pyc
 .DS_Store
+
+exports/
