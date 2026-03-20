@@ -5,7 +5,7 @@ import os
 
 # --- CONFIGURATION ---
 # Ensure these match the output names in analytics.py
-INPUT_REPORT_CSV = 'report_finale.csv'
+INPUT_REPORT_CSV = 'final_report.csv'
 INPUT_STOCKS_CSV = 'stocks_profit.csv'
 OUTPUT_HTML = 'dashboard.html'
 CSS_FILE = 'style.css'

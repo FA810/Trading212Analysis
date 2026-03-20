@@ -5,7 +5,7 @@ import os
 
 # --- CONFIGURATION ---
 DATA_FOLDER = 'exports'  # Folder containing your CSV files
-REPORT_CSV = 'report_finale.csv'
+REPORT_CSV = 'final_report.csv'
 STOCKS_CSV = 'stocks_profit.csv'
 TEXT_REPORT = 'report_readable.txt'
 
