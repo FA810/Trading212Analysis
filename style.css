@@ -1,26 +1,53 @@
 /* style.css */
 html, body {
-    background-color: #1e1e1e;
+    background-color: #0b0e11;
+    color: #e0e0e0;
     margin: 0;
     padding: 0;
     width: 100%;
-    /* Permettiamo lo scroll verticale se il grafico è alto */
     overflow-x: hidden; 
-    overflow-y: auto; 
+    /* Set Montserrat as primary font */
+    font-family: 'Montserrat', sans-serif;
 }
 
 body {
-    padding: 20px;
+    padding: 10px;
     box-sizing: border-box;
 }
 
 .dashboard-container {
     width: 100%;
-    /* Non mettiamo height qui, comanda il Python */
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
+    background: #0b0e11;
 }
 
-/* Rimuove eventuali bordi blu al click */
+/* Titles and labels polish */
+.gtitle {
+    font-weight: 700 !important;
+    letter-spacing: 1px !important;
+    fill: #00d4ff !important;
+}
+
+/* Interactive elements polish */
+.js-plotly-plot, .plot-container {
+    width: 100% !important;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #0b0e11;
+}
+::-webkit-scrollbar-thumb {
+    background: #23272e;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #00d4ff;
+}
+
 *:focus {
     outline: none;
 }
