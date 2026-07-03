@@ -3,6 +3,7 @@
 report_finale.csv
 stocks_profit.csv
 report_readable.txt
+*.csv                  # 🌟 AGGIUNTA: Blocca qualsiasi altro CSV di Trading 212 che potresti dimenticare nella cartella
 
 # --- Dashboard output ---
 dashboard.html
@@ -11,5 +12,10 @@ dashboard.html
 __pycache__/
 *.pyc
 .DS_Store
+
+# --- Docker & Databases ---
+.env
+postgres_data/         # 🌟 AGGIUNTA: Se usi i volumi locali di Docker per Postgres, evita di caricare il database grezzo
+.streamlit/            # 🌟 AGGIUNTA: Blocca le configurazioni di runtime locali di Streamlit (es. i temi scuri scelti da te)
 
 exports/
