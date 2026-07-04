@@ -3,7 +3,6 @@ services:
     image: postgres:15-alpine
     container_name: t212_postgres
     environment:
-      # Use .env file variables to keep credentials secure and out of version control
       POSTGRES_USER: ${DB_USER:-trading_user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-trading_password}
       POSTGRES_DB: ${DB_NAME:-trading212}
@@ -11,6 +10,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # 🎯 Mappa il file schema.sql locale nella cartella di inizializzazione nativa di Postgres
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks:
       - t212_network
     restart: unless-stopped
@@ -37,7 +38,6 @@ services:
     volumes:
       - .:/app
     environment:
-      # Uses the internal network service name as the host address
       - DB_HOST=postgres_db
       - DB_NAME=${DB_NAME:-trading212}
       - DB_USER=${DB_USER:-trading_user}
@@ -48,25 +48,8 @@ services:
       - t212_network
     restart: unless-stopped
 
-  # Grafana block is currently disabled. Uncomment sections below to re-enable it.
-  # grafana:
-  #   image: grafana/grafana-oss:latest
-  #   container_name: t212_grafana
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - postgres_db
-  #   networks:
-  #     - t212_network
-  #   volumes:
-  #     - grafana_data:/var/lib/grafana
-  #     - ./grafana_provisioning/datasources:/etc/grafana/provisioning/datasources
-  #     - ./grafana_provisioning/dashboards:/etc/grafana/provisioning/dashboards
-  #   restart: unless-stopped
-
 volumes:
   postgres_data:
-  # grafana_data:
 
 networks:
   t212_network:
