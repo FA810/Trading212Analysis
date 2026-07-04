@@ -1,5 +1,7 @@
 # Trading 212 Analytics Dashboard
 
+> Full-stack portfolio analytics app for Trading 212 users. Features a PostgreSQL ledger backend and a dynamic Streamlit UI to track real capital gains, automated asset allocation, and historical performance. Local, private, and Docker-ready.
+
 A modern, local financial analytics application built with Streamlit, Plotly, and PostgreSQL to process, analyze, and visualize Trading 212 account transaction logs.
 
 ## Screenshots
