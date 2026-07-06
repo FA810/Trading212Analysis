@@ -5,7 +5,7 @@ import psycopg2
 import os
 from theme_manager import inject_theme_sidebar
 
-# 1. Configurazione della pagina e iniezione del tema attivo
+# 1. Page Configuration & Custom Theme Integration
 st.set_page_config(layout="wide")
 TEMA_ATTIVO = inject_theme_sidebar()
 
@@ -13,7 +13,7 @@ st.title("Dividends Analysis")
 st.caption(f"Track your monthly passive income streams • Current theme: {st.session_state.tema_scelto}")
 st.markdown("---")
 
-# 2. Funzione di connessione al database ereditata dal setup di db_importer
+# 2. Database Connection Factory inherited from db_importer environment setup
 def get_db_connection():
     return psycopg2.connect(
         host=os.getenv("DB_HOST", "localhost"),
@@ -23,12 +23,12 @@ def get_db_connection():
         password=os.environ["DB_PASSWORD"]
     )
 
-# 3. Caricamento e aggregazione dati dei dividendi
+# 3. Data Fetching, Filtering, and Temporal Aggregation for Dividends
 @st.cache_data(ttl=30)
 def load_dividend_data():
     try:
         conn = get_db_connection()
-        # Estraiamo i dividendi storici aggregando per data e ticker
+        # Query historical dividend records by filtering on the transaction 'action' type
         query = """
             SELECT 
                 timestamp as date,
@@ -45,11 +45,11 @@ def load_dividend_data():
         if df.empty:
             return pd.DataFrame()
             
-        # Trasformazioni temporali stabili
+        # Parse timestamps and generate consistent temporal dimensional fields
         df['date'] = pd.to_datetime(df['date'])
         df['year'] = df['date'].dt.year
         df['month_num'] = df['date'].dt.month
-        df['month_label'] = df['date'].dt.strftime('%b') # Jan, Feb, Mar...
+        df['month_label'] = df['date'].dt.strftime('%b') # Generates short text: Jan, Feb, Mar...
         return df
     except Exception as e:
         st.error(f"Database connection error: {e}")
@@ -60,30 +60,30 @@ df_raw = load_dividend_data()
 if df_raw.empty:
     st.info("No dividend transaction data available in the database yet. Make sure to import your CSV reports.")
 else:
-    # 4. Selezione dell'anno in cima alla pagina
+    # 4. Top-level Year Selector Filter
     elenco_anni = sorted(df_raw['year'].unique(), reverse=True)
     selected_year = st.selectbox("Select historical year:", options=elenco_anni)
     
-    # Filtro dei dati per l'anno selezionato
+    # Filter the primary DataFrame based on user selection
     df_year = df_raw[df_raw['year'] == selected_year].copy()
     
     if df_year.empty:
         st.warning(f"No dividends found for the year {selected_year}.")
     else:
         # ==========================================================
-        # 5. RAGGRUPPAMENTO DINAMICO SOGLIA % (Sotto 5% va in Others)
+        # 5. DYNAMIC THRESHOLD ASSET GROUPING (Under 5% grouped into 'Others')
         # ==========================================================
         ticker_totals = df_year.groupby('ticker')['amount'].sum()
         total_year_amount = ticker_totals.sum()
         
-        # Soglia dinamica del 5% per l'esposizione annuale dell'asset
+        # Define a 5% allocation threshold to group minor assets and reduce chart clutter
         soglia_percentuale = 0.05 
         
         top_tickers = ticker_totals[
             (ticker_totals / total_year_amount) >= soglia_percentuale
         ].index.tolist()
         
-        # Salvaguardia: Forza MAIN a stare fuori da "Others" indipendentemente dalla soglia
+        # Safeguard: Explicitly prevent 'MAIN' from being grouped into 'Others' regardless of weight
         if 'MAIN' in ticker_totals.index and 'MAIN' not in top_tickers:
             top_tickers.append('MAIN')
             
@@ -92,17 +92,17 @@ else:
         )
         
         # ==========================================================
-        # 6. PREPARAZIONE STRUTTURA COMPLETA A 12 MESI (Jan - Dec)
+        # 6. 12-MONTH MATRIX RECONSTRUCTION (Ensures complete Jan - Dec axis)
         # ==========================================================
         mesi_anno = pd.DataFrame({
             'month_num': range(1, 13),
             'month_label': ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         })
         
-        # Raggruppiamo i dati reali post-filtro ticker
+        # Aggregate real filtered data by grouped assets and months
         df_grouped = df_year.groupby(['month_num', 'month_label', 'ticker_grouped'])['amount'].sum().reset_index()
         
-        # Generiamo la matrice fissa a 12 mesi combinando tutti i cluster attivi nell'anno
+        # Build a cross-product matrix to ensure zero-dividend months are preserved in the visual layout
         all_tickers = df_year['ticker_grouped'].unique()
         griglia_completa = pd.MultiIndex.from_product(
             [range(1, 13), all_tickers], 
@@ -110,23 +110,23 @@ else:
         ).to_frame().reset_index(drop=True)
         griglia_completa = griglia_completa.merge(mesi_anno, on='month_num')
         
-        # Creazione del DataFrame definitivo per l'alimentazione del grafico
+        # Final DataFrame merging the complete grid with real database values
         df_grafico = griglia_completa.merge(df_grouped, on=['month_num', 'month_label', 'ticker_grouped'], how='left')
         df_grafico['amount'] = df_grafico['amount'].fillna(0.0)
         df_grafico = df_grafico.sort_values('month_num')
         
-        # Generazione sicura del testo interno escludendo i blocchi con 0 euro
+        # Format inline labels, keeping zero values completely blank for visual clarity
         df_grafico['text_inside'] = [
             f"{row['ticker_grouped']}<br>€{row['amount']:.2f}" if row['amount'] > 0 else ""
             for _, row in df_grafico.iterrows()
         ]
 
         # ==========================================================
-        # 7. CALCOLO METRICHE (KPI) CORRETTE (Escluso Mese Corrente)
+        # 7. PERFORMANCE METRICS (KPIs) & COMPLETED MONTHS AVERAGE
         # ==========================================================
         current_time = pd.Timestamp.now()
         
-        # Isolamento puro dei mesi chiusi per evitare alterazioni sulla media
+        # To avoid skewing the monthly average, exclude the current ongoing month if evaluating the current year
         if selected_year == current_time.year:
             df_media_base = df_year[df_year['month_num'] < current_time.month]
             total_for_average = df_media_base['amount'].sum()
@@ -140,12 +140,12 @@ else:
         media_mensile = total_for_average / months_to_divide
         total_received = df_year['amount'].sum()
         
-        # Analisi del picco storico mensile
+        # Calculate historical performance peaks
         stats_mensili = df_year.groupby('month_label')['amount'].sum()
         best_month = stats_mensili.idxmax() if not stats_mensili.empty else "N/A"
         best_month_val = stats_mensili.max() if not stats_mensili.empty else 0.0
         
-        # Render dei KPI Widget
+        # Render KPI widgets layout
         kpi1, kpi2, kpi3 = st.columns(3)
         with kpi1:
             st.metric(label=f"Total Dividends ({selected_year})", value=f"€{total_received:,.2f}")
@@ -157,7 +157,7 @@ else:
         st.markdown("---")
         
         # ==========================================================
-        # 8. CREAZIONE GRAFICO CON PLOTLY (Testi Interni + Totale in Cima, Senza Tooltip)
+        # 8. PLOTLY STACKED BAR CHART GENERATION
         # ==========================================================
         st.subheader("Monthly Dividend Breakdown")
         
@@ -173,7 +173,7 @@ else:
             category_orders={"month_label": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]}
         )
         
-        # Pulizia totale degli specchi hover e ancoraggio testi all'interno dei mattoncini
+        # Disable hover tooltips and anchor text safely inside stacked bar blocks
         fig_bar.update_traces(
             hoverinfo="skip",
             hovertemplate=None,
@@ -191,7 +191,7 @@ else:
             legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5)
         )
         
-        # Calcolo dinamico aggregato per piazzare l'etichetta del totale in cima alle colonne
+        # Programmatically calculate cumulative monthly sums to position bold total labels on top of bars
         fig_bar.update_layout(
             annotations=[
                 dict(
@@ -209,12 +209,12 @@ else:
         st.plotly_chart(fig_bar, use_container_width=True)
         
         # ==========================================================
-        # 9. TABELLA DI DETTAGLIO IN FONDO (Mesi Alternati e Fullname)
+        # 9. GRANULAR LOG DATAFRAME (Alternating monthly background fills)
         # ==========================================================
         st.markdown("---")
         st.subheader("Granular Dividend Log")
         
-        # Registro anagrafico centralizzato per la normalizzazione dei Ticker
+        # Static asset registry mapping tickers to corporate names
         TICKER_NAMES = {
             "NOV": "Novo Nordisk",
             "RY6": "Realty Income",
@@ -227,29 +227,29 @@ else:
             "SHELL": "Shell"
         }
         
-        # Estrazione log storico per l'anno in esame
+        # Prepare historical data slice for tabular rendering
         df_log = df_year[['date', 'ticker', 'amount']].sort_values('date', ascending=False).copy()
         df_log['month_num'] = df_log['date'].dt.month
         
-        # Abbinamento del Nome Esteso societario
+        # Inject matching company name
         df_log['Asset Name'] = df_log['ticker'].apply(lambda x: TICKER_NAMES.get(x, x))
         
-        # Pulizia estetica delle stringhe valutarie e temporali
+        # Format currency representations and timestamps
         df_log['Formatted Date'] = df_log['date'].dt.strftime('%Y-%m-%d')
         df_log['Formatted Amount'] = df_log['amount'].apply(lambda x: f"€ {x:,.2f}")
         
-        # Selezione dei campi finali per il rendering utente
+        # Project final analytical views for display
         df_display = df_log[['Formatted Date', 'ticker', 'Asset Name', 'Formatted Amount', 'month_num']].copy()
         df_display.columns = ['Date', 'Ticker', 'Company Name', 'Amount', 'month_num']
         
-        # Algoritmo di colorazione per blocco mensile alternato (ottimizzato tema scuro)
+        # Style callback rendering dark-theme optimized alternating background blocks based on month parity
         def color_by_month(row):
             bg_color = 'background-color: #1e2638;' if row['month_num'] % 2 != 0 else ''
             return [bg_color] * len(row)
         
         styled_df = df_display.style.apply(color_by_month, axis=1)
         
-        # Visualizzazione del log tabellare filtrato
+        # Render final data frame with hidden numeric indexes and internal configuration blocks
         st.dataframe(
             styled_df, 
             use_container_width=True, 
