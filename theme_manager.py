@@ -1,7 +1,8 @@
 # theme_manager.py
 import streamlit as st
 import plotly.express as px
-from backend.queries import get_kpi_metrics, get_detailed_pl
+# Importiamo la nuova funzione dal backend
+from backend.queries import get_kpi_metrics, get_detailed_pl, get_data_range_bounds
 
 # Centralized registry for application color schemes, chart palettes, and matching UI emojis
 THEME_DICTIONARY = {
@@ -67,6 +68,19 @@ def inject_theme_sidebar():
 
         st.markdown("### Total Return Generated")
         st.metric(label="Capital Gains + Dividends + Interest", value=f"€{total_return:,.2f}")
+        
+        # ----------------------------------------------------------
+        # Dates covered for Analysis (CSV Bounds)
+        # ----------------------------------------------------------
+        min_date, max_date = get_data_range_bounds()
+        if min_date and max_date:
+            str_min = min_date.strftime("%Y-%m-%d")
+            str_max = max_date.strftime("%Y-%m-%d")
+            st.markdown(f"Coverage: {str_min} to {str_max}")
+            st.caption(f"⏱️ Last imported transaction: {max_date.strftime('%H:%M:%S')}")
+        else:
+            st.caption("⚠️ No tracking data found in database.")
+            
         st.markdown("---")
         
         # 2. Custom Navigation Layout featuring dynamically matched theme emojis

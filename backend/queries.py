@@ -290,3 +290,13 @@ def get_all_transactions():
     """Returns comprehensive ledger listings without filter limitations."""
     query = "SELECT * FROM stock_transactions ORDER BY timestamp DESC;"
     return run_query(query)
+    
+def get_data_range_bounds():
+    """Extracts the minimum and maximum transaction timestamps using the central run_query engine."""
+    try:
+        df = run_query("SELECT MIN(timestamp) as min_t, MAX(timestamp) as max_t FROM stock_transactions;")
+        if not df.empty and pd.notna(df['min_t'].iloc[0]) and pd.notna(df['max_t'].iloc[0]):
+            return df['min_t'].iloc[0], df['max_t'].iloc[0]
+        return None, None
+    except Exception:
+        return None, None
