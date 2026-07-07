@@ -3,7 +3,11 @@ import pandas as pd
 from theme_manager import inject_theme_sidebar
 from backend.queries import get_all_transactions
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_title="Trading 212 Analytics", 
+    page_icon="📈", 
+    layout="wide"
+)
 TEMA_ATTIVO = inject_theme_sidebar()
 st.title("Complete Transaction Log")
 st.markdown("---")

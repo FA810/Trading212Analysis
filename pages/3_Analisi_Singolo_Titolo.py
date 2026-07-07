@@ -4,7 +4,11 @@ import plotly.graph_objects as go
 from backend.queries import run_query, calculate_ticker_timeline
 from theme_manager import inject_theme_sidebar
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_title="Trading 212 Analytics", 
+    page_icon="📈", 
+    layout="wide"
+)
 TEMA_ATTIVO = inject_theme_sidebar()
 st.title("Historical Timeline of Realized Sales")
 st.markdown("---")

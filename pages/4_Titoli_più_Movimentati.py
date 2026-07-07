@@ -3,7 +3,11 @@ import plotly.express as px
 from backend.queries import get_most_traded_stocks
 from theme_manager import inject_theme_sidebar
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_title="Trading 212 Analytics", 
+    page_icon="📈", 
+    layout="wide"
+)
 TEMA_ATTIVO = inject_theme_sidebar()
 st.title("Trading Frequency Analysis")
 st.markdown("---")
