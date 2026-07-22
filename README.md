@@ -4,7 +4,7 @@
 
 A modern, local financial analytics application built with Streamlit, Plotly, and PostgreSQL to process, analyze, and visualize Trading 212 account transaction logs.
 
-## How to Run
+# How to Run
 
 ### Prerequisites
 
@@ -35,7 +35,7 @@ Make the shell scripts executable (first time only):
 chmod +x start_docker_mode.sh start_hybrid_mode.sh
 ```
 
-## Option A: Full Docker Mode (Recommended)
+#### Option A: Full Docker Mode (Recommended)
 
 Runs PostgreSQL, pgAdmin, and Streamlit entirely inside Docker containers.
 
@@ -43,7 +43,7 @@ Runs PostgreSQL, pgAdmin, and Streamlit entirely inside Docker containers.
 ./start_docker_mode.sh
 ```
 
-### Option B: Hybrid Mode (For Developers)
+#### Option B: Hybrid Mode (For Developers)
 
 Runs PostgreSQL and pgAdmin in Docker, but runs Streamlit locally on your machine for quick code editing and hot-reloading.
 
