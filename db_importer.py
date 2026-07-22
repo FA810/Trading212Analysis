@@ -126,15 +126,23 @@ def import_csv_to_database(csv_file_path):
             
             for row in csv_reader:
                 action = parse_string(row.get('Action'))
-                raw_time = row.get('Time')
                 
-                # Check for mandatory keys; do not skip rows due to missing ID yet as we handle it below
+                # Flexible timestamp lookup: handles both 'Time' and updated 'Time (UTC)' CSV column headers
+                raw_time = row.get('Time') or row.get('Time (UTC)')
+                
+                # Check for mandatory keys; skip incomplete rows
                 if not action or not raw_time:
                     continue 
                 
-                timestamp = datetime.strptime(raw_time, "%Y-%m-%d %H:%M:%S")
+                # Sanitize ISO timezone suffixes (e.g., '2026-06-21 01:08:39+00:00' -> '2026-06-21 01:08:39')
+                raw_time_clean = raw_time.split('+')[0].strip()
+                try:
+                    timestamp = datetime.strptime(raw_time_clean, "%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    # Skip row if timestamp parsing fails on unexpected formatting
+                    continue
                 
-                # ID Handling: If the CSV does not provide an ID (common in dividend lines), generate a unique deterministic slug
+                # ID Handling: If the CSV does not provide an ID (common in older dividend lines), generate a deterministic slug
                 row_id = parse_string(row.get('ID'))
                 if not row_id:
                     ticker_slug = parse_string(row.get('Ticker')) if row.get('Ticker') else "CASH"
@@ -165,7 +173,7 @@ def import_csv_to_database(csv_file_path):
                     # Execute statement applying dynamic inline evaluation wrapper logic to guarantee a valid currency string
                     cursor.execute(insert_stock_query, (
                         row_id, action, timestamp, ticker, isin, name,
-                        quantity, price, price_curr, total, total_currency := total_curr if total_curr else result_curr,
+                        quantity, price, price_curr, total, total_curr if total_curr else result_curr,
                         result, result_curr
                     ))
                     inserted_stocks += cursor.rowcount
